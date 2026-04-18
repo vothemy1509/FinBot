@@ -256,6 +256,21 @@ def build_report(coin_ids):
     fear_greed = fetch_fear_greed()
     selected = market[:10]  # Giới hạn 10 coin để báo cáo không quá dài
     analyzed = [analyze_coin(c) for c in selected]
+    
+    # Sắp xếp theo ưu tiên của sếp
+    def get_priority(coin):
+        name_lower = coin['name'].lower()
+        symbol_lower = coin['symbol'].lower()
+        if "neo" in name_lower or "neo" == symbol_lower:
+            return 1
+        if "bitcoin" in name_lower or "btc" == symbol_lower:
+            return 2
+        if coin['risk_level'] == "HIGH":
+            return 3
+        return 4
+
+    analyzed.sort(key=get_priority)
+    
     markdown, filepath = generate_markdown_report(analyzed, fear_greed)
     summary = f"Fear & Greed: {fear_greed['value']} - {fear_greed['label']}. {len(analyzed)} coin đã được phân tích."
 
