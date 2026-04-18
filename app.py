@@ -137,6 +137,16 @@ def analyze_coin(coin):
         confidence = 58
         risk = "LOW"
 
+    # Logic khuyến nghị đầu tư
+    if direction == "UP" and confidence > 65 and risk == "LOW":
+        recommendation = "🚀 NÊN ĐẦU TƯ (Strong Buy)"
+    elif direction == "UP" or (direction == "SIDEWAYS" and risk == "LOW"):
+        recommendation = "👀 THEO DÕI THÊM (Watchlist)"
+    elif direction == "DOWN" or risk == "HIGH":
+        recommendation = "⚠️ CẨN TRỌNG / KHÔNG ĐẦU TƯ (Avoid)"
+    else:
+        recommendation = "😐 GIỮ NGUYÊN (Hold)"
+
     target_price = round(float(coin["current_price"]) * (1.05 if direction == "UP" else 0.95 if direction == "DOWN" else 1.01), 2)
     return {
         "name": coin["name"],
@@ -153,6 +163,7 @@ def analyze_coin(coin):
         "confidence": confidence,
         "target_price": target_price,
         "risk_level": risk,
+        "recommendation": recommendation,
         "reasoning": f"Biến động 24h {round(change_24h, 2)}% và 7d {round(change_7d, 2)}%.",
     }
 
@@ -187,6 +198,8 @@ def generate_markdown_report(coins, fear_greed):
             f"- Confidence: {coin['confidence']}%",
             f"- Target Price: ${coin['target_price']}",
             f"- Risk Level: {coin['risk_level']}",
+            f"- Near-term Trend: {'Tăng' if coin['direction'] == 'UP' else 'Giảm' if coin['direction'] == 'DOWN' else 'Đi ngang'}",
+            f"- Có nên đầu tư: {coin['recommendation']}",
             f"- Reasoning: {coin['reasoning']}",
         ])
 
