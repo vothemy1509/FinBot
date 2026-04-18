@@ -352,6 +352,28 @@ def send_latest_email():
     return redirect(url_for("dashboard"))
 
 
+@app.get("/tasks/send-daily-telegram")
+def send_daily_telegram_task():
+    cron_token = os.environ.get("CRON_SECRET")
+    provided = request.args.get("token")
+    if cron_token and provided != cron_token:
+        return {"ok": False, "error": "unauthorized"}, 401
+
+    coin_ids = os.environ.get("DAILY_REPORT_COINS", "neo,bitcoin,ethereum,solana,ripple")
+    try:
+        row, analyzed, fear_greed, markdown = build_report(coin_ids)
+        send_telegram(markdown)
+        return {
+            "ok": True,
+            "message": "daily report sent",
+            "title": row.title,
+            "coins": [c["symbol"] for c in analyzed],
+            "fear_greed": fear_greed,
+        }
+    except Exception as exc:
+        return {"ok": False, "error": str(exc)}, 500
+
+
 with app.app_context():
     db.create_all()
 

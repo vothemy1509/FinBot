@@ -29,6 +29,13 @@ Sao chép `.env.example` thành `.env` rồi điền thông tin.
 4. Railway tự dùng `Procfile`: `web: gunicorn app:app`
 5. Test `/health` sau deploy
 
+## Tự động gửi Telegram lúc 7h sáng
+- Endpoint cron: `/tasks/send-daily-telegram?token=CRON_SECRET`
+- ENV dùng cho cron:
+  - `DAILY_REPORT_COINS=neo,bitcoin,ethereum,solana,ripple`
+  - `CRON_SECRET=your-secret`
+- Trên Railway có thể tạo cron/job hoặc dùng dịch vụ gọi URL mỗi ngày lúc 07:00 GMT+7
+
 ## Gợi ý ENV tối thiểu
 - `SECRET_KEY`
 - `DATABASE_URL` (có thể để SQLite local)
