@@ -40,13 +40,12 @@ class Report(db.Model):
     markdown_path = db.Column(db.String(255))
 
 
-def fetch_market_data():
+def fetch_market_data(coin_ids="bitcoin,ethereum,binancecoin,solana,ripple"):
     url = "https://api.coingecko.com/api/v3/coins/markets"
     params = {
         "vs_currency": "usd",
+        "ids": coin_ids.strip(),
         "order": "market_cap_desc",
-        "per_page": 10,
-        "page": 1,
         "sparkline": "false",
         "price_change_percentage": "7d",
     }
@@ -252,10 +251,10 @@ def send_email(subject, body):
     return True, "Đã gửi email"
 
 
-def build_report():
-    market = fetch_market_data()
+def build_report(coin_ids):
+    market = fetch_market_data(coin_ids)
     fear_greed = fetch_fear_greed()
-    selected = market[:5]
+    selected = market[:10]  # Giới hạn 10 coin để báo cáo không quá dài
     analyzed = [analyze_coin(c) for c in selected]
     markdown, filepath = generate_markdown_report(analyzed, fear_greed)
     summary = f"Fear & Greed: {fear_greed['value']} - {fear_greed['label']}. {len(analyzed)} coin đã được phân tích."
@@ -292,9 +291,15 @@ def get_report_file(filename):
 
 @app.post("/generate-report")
 def generate_report_route():
+    coins_input = request.form.get("coins") or "bitcoin,ethereum,binancecoin,solana,ripple"
     try:
-        row, analyzed, fear_greed, markdown = build_report()
+        row, analyzed, fear_greed, markdown = build_report(coins_input)
         flash(f"Đã tạo báo cáo: {row.title}", "success")
+    except requests.exceptions.HTTPError as err:
+        if err.response.status_code == 429:
+            flash("Lỗi 429: CoinGecko đang quá tải (Too Many Requests). Sếp vui lòng đợi 1-2 phút rồi thử lại nhé!", "error")
+        else:
+            flash(f"Lỗi API: {err}", "error")
     except Exception as exc:
         flash(f"Không tạo được báo cáo: {exc}", "error")
     return redirect(url_for("dashboard"))
