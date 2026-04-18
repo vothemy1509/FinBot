@@ -306,7 +306,7 @@ def get_report_file(filename):
 
 @app.post("/generate-report")
 def generate_report_route():
-    coins_input = request.form.get("coins") or "bitcoin,ethereum,binancecoin,solana,ripple"
+    coins_input = request.form.get("coins") or "neo,bitcoin,ethereum,solana,ripple"
     try:
         row, analyzed, fear_greed, markdown = build_report(coins_input)
         flash(f"Đã tạo báo cáo: {row.title}", "success")
