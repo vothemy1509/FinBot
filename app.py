@@ -137,15 +137,13 @@ def analyze_coin(coin):
         confidence = 58
         risk = "LOW"
 
-    # Logic khuyến nghị đầu tư
-    if direction == "UP" and confidence > 65 and risk == "LOW":
-        recommendation = "🚀 NÊN ĐẦU TƯ (Strong Buy)"
-    elif direction == "UP" or (direction == "SIDEWAYS" and risk == "LOW"):
-        recommendation = "👀 THEO DÕI THÊM (Watchlist)"
-    elif direction == "DOWN" or risk == "HIGH":
-        recommendation = "⚠️ CẨN TRỌNG / KHÔNG ĐẦU TƯ (Avoid)"
+    # Logic khuyến nghị đầu tư theo chuẩn "Mua/Bán/Không làm gì"
+    if direction == "UP" and risk != "HIGH":
+        recommendation = "✅ MUA (Tín hiệu tích cực)"
+    elif direction == "DOWN" and (confidence >= 65 or risk == "HIGH"):
+        recommendation = "❌ BÁN (Đang có đà giảm/rủi ro cao)"
     else:
-        recommendation = "😐 GIỮ NGUYÊN (Hold)"
+        recommendation = "⏳ TẠM THỜI KHÔNG LÀM GÌ (Quan sát thêm)"
 
     target_price = round(float(coin["current_price"]) * (1.05 if direction == "UP" else 0.95 if direction == "DOWN" else 1.01), 2)
     return {
