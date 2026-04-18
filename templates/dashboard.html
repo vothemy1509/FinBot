@@ -1,0 +1,101 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>FinBot Dashboard</title>
+  <style>
+    body { font-family: Arial, sans-serif; background:#0f172a; color:#e2e8f0; margin:0; padding:24px; }
+    .container { max-width:1100px; margin:0 auto; }
+    .card { background:#1e293b; border-radius:16px; padding:20px; margin-bottom:20px; }
+    .btn { background:#38bdf8; color:#082f49; border:none; padding:10px 16px; border-radius:10px; font-weight:bold; cursor:pointer; margin-right:10px; }
+    .btn-secondary { background:#a78bfa; color:white; }
+    .btn-warning { background:#f59e0b; color:black; }
+    .muted { color:#94a3b8; }
+    .flash { padding:12px 14px; border-radius:10px; margin-bottom:12px; }
+    .success { background:#14532d; }
+    .error { background:#7f1d1d; }
+    table { width:100%; border-collapse: collapse; }
+    th, td { padding:12px; border-bottom:1px solid #334155; text-align:left; }
+  </style>
+</head>
+<body>
+<div class="container">
+  <div class="card">
+    <h1>🤖 FinBot Dashboard</h1>
+    <p class="muted">MVP hệ thống báo cáo tài chính & dự đoán xu hướng crypto.</p>
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        {% for category, message in messages %}
+          <div class="flash {{ category }}">{{ message }}</div>
+        {% endfor %}
+      {% endif %}
+    {% endwith %}
+    <form method="post" action="/generate-report" style="display:inline-block;">
+      <button class="btn" type="submit">Tạo báo cáo mới</button>
+    </form>
+    <form method="post" action="/send-latest-telegram" style="display:inline-block;">
+      <button class="btn btn-secondary" type="submit">Gửi Telegram</button>
+    </form>
+    <form method="post" action="/send-latest-email" style="display:inline-block;">
+      <button class="btn btn-warning" type="submit">Gửi Email</button>
+    </form>
+  </div>
+
+  <div class="card">
+    <h2>Báo cáo gần nhất</h2>
+    {% if latest %}
+      <p><strong>{{ latest.title }}</strong></p>
+      <p>{{ latest.summary }}</p>
+      <p class="muted">Fear & Greed: {{ latest.fear_greed_value }} — {{ latest.fear_greed_label }}</p>
+      <p class="muted">Tạo lúc: {{ latest.created_at }}</p>
+      <p class="muted">File markdown: 
+        {% if latest.markdown_path %}
+          <a href="/reports/{{ latest.markdown_path }}" target="_blank" style="color:#7dd3fc">{{ latest.markdown_path }}</a>
+        {% else %}
+          N/A
+        {% endif %}
+      </p>
+    {% else %}
+      <p>Chưa có báo cáo nào.</p>
+    {% endif %}
+  </div>
+
+  <div class="card">
+    <h2>Lịch sử báo cáo</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>Tiêu đề</th>
+          <th>Tóm tắt</th>
+          <th>Fear & Greed</th>
+          <th>Tạo lúc</th>
+          <th>File</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for row in reports %}
+        <tr>
+          <td>{{ row.id }}</td>
+          <td>{{ row.title }}</td>
+          <td>{{ row.summary }}</td>
+          <td>{{ row.fear_greed_value }} - {{ row.fear_greed_label }}</td>
+          <td>{{ row.created_at }}</td>
+          <td>
+            {% if row.markdown_path %}
+              <a href="/reports/{{ row.markdown_path }}" target="_blank" style="color:#7dd3fc">Xem</a>
+            {% else %}
+              -
+            {% endif %}
+          </td>
+        </tr>
+        {% else %}
+        <tr><td colspan="6">Chưa có dữ liệu.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+</body>
+</html>
