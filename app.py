@@ -49,9 +49,27 @@ def fetch_market_data(coin_ids="bitcoin,ethereum,binancecoin,solana,ripple"):
         "sparkline": "false",
         "price_change_percentage": "7d",
     }
-    response = requests.get(url, params=params, timeout=20)
-    response.raise_for_status()
-    return response.json()
+    
+    api_key = os.environ.get("COINGECKO_API_KEY")
+    headers = {}
+    if api_key:
+        # Demo API Key uses 'x-cg-demo-api-key' header
+        headers["x-cg-demo-api-key"] = api_key
+
+    # Retry logic for 429 errors
+    for attempt in range(3):
+        try:
+            response = requests.get(url, params=params, headers=headers, timeout=20)
+            if response.status_code == 429:
+                import time
+                time.sleep(2 ** attempt) # Exponential backoff
+                continue
+            response.raise_for_status()
+            return response.json()
+        except Exception as e:
+            if attempt == 2:
+                raise e
+    raise Exception("CoinGecko API too busy after 3 retries")
 
 
 def fetch_fear_greed():

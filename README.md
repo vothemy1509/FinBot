@@ -41,3 +41,4 @@ Sao chép `.env.example` thành `.env` rồi điền thông tin.
 - `DATABASE_URL` (có thể để SQLite local)
 - `TELEGRAM_BOT_TOKEN`, `TELEGRAM_CHAT_ID` (nếu dùng Telegram)
 - `SMTP_SERVER`, `SMTP_PORT`, `SMTP_USERNAME`, `SMTP_PASSWORD`, `EMAIL_FROM`, `EMAIL_TO` (nếu dùng email)
+- `COINGECKO_API_KEY` (khuyến nghị để tránh lỗi 429 Too Many Requests)
