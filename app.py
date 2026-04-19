@@ -285,23 +285,28 @@ def build_report(coin_ids):
     fear_greed = fetch_fear_greed()
     selected = market[:10]  # Giới hạn 10 coin để báo cáo không quá dài
     analyzed = [analyze_coin(c) for c in selected]
-    
-    # Sắp xếp theo ưu tiên của sếp
-    def get_priority(coin):
-        name_lower = coin['name'].lower()
-        symbol_lower = coin['symbol'].lower()
-        if "neo" in name_lower or "neo" == symbol_lower:
-            return 1
-        if "bitcoin" in name_lower or "btc" == symbol_lower:
-            return 2
-        if coin['risk_level'] == "HIGH":
-            return 3
-        return 4
 
-    analyzed.sort(key=get_priority)
-    
-    markdown, filepath = generate_markdown_report(analyzed, fear_greed)
-    summary = f"Fear & Greed: {fear_greed['value']} - {fear_greed['label']}. {len(analyzed)} coin đã được phân tích."
+    # Chỉ giữ theo rule: NEO, Bitcoin, và các coin có Risk HIGH
+    neo_coin = next((c for c in analyzed if c["symbol"].upper() == "NEO" or "neo" in c["name"].lower()), None)
+    btc_coin = next((c for c in analyzed if c["symbol"].upper() == "BTC" or "bitcoin" in c["name"].lower()), None)
+    high_risk_coins = [
+        c for c in analyzed
+        if c.get("risk_level") == "HIGH" and (c is not neo_coin) and (c is not btc_coin)
+    ]
+
+    filtered = []
+    if neo_coin:
+        filtered.append(neo_coin)
+    if btc_coin:
+        filtered.append(btc_coin)
+    filtered.extend(high_risk_coins)
+
+    # Nếu không có coin nào đúng rule thì fallback báo ít nhất NEO/BTC nếu có trong input, hoặc coin đầu tiên
+    if not filtered:
+        filtered = analyzed[:1]
+
+    markdown, filepath = generate_markdown_report(filtered, fear_greed)
+    summary = f"Fear & Greed: {fear_greed['value']} - {fear_greed['label']}. {len(filtered)} coin theo rule Neo/Bitcoin/High."
 
     row = Report(
         created_at=datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S"),
@@ -313,7 +318,7 @@ def build_report(coin_ids):
     )
     db.session.add(row)
     db.session.commit()
-    return row, analyzed, fear_greed, markdown
+    return row, filtered, fear_greed, markdown
 
 
 @app.get("/health")
