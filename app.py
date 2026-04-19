@@ -286,27 +286,25 @@ def build_report(coin_ids):
     selected = market[:10]  # Giới hạn 10 coin để báo cáo không quá dài
     analyzed = [analyze_coin(c) for c in selected]
 
-    # Chỉ giữ theo rule: NEO, Bitcoin, và các coin có Risk HIGH
+    # Chỉ giữ theo rule: NEO, Bitcoin, và coin HIGH (Highstreet)
     neo_coin = next((c for c in analyzed if c["symbol"].upper() == "NEO" or "neo" in c["name"].lower()), None)
     btc_coin = next((c for c in analyzed if c["symbol"].upper() == "BTC" or "bitcoin" in c["name"].lower()), None)
-    high_risk_coins = [
-        c for c in analyzed
-        if c.get("risk_level") == "HIGH" and (c is not neo_coin) and (c is not btc_coin)
-    ]
+    high_coin = next((c for c in analyzed if c["symbol"].upper() == "HIGH" or "highstreet" in c["name"].lower()), None)
 
     filtered = []
     if neo_coin:
         filtered.append(neo_coin)
     if btc_coin:
         filtered.append(btc_coin)
-    filtered.extend(high_risk_coins)
+    if high_coin and high_coin not in filtered:
+        filtered.append(high_coin)
 
-    # Nếu không có coin nào đúng rule thì fallback báo ít nhất NEO/BTC nếu có trong input, hoặc coin đầu tiên
+    # Nếu không có coin nào đúng rule thì fallback báo ít nhất coin đầu tiên
     if not filtered:
         filtered = analyzed[:1]
 
     markdown, filepath = generate_markdown_report(filtered, fear_greed)
-    summary = f"Fear & Greed: {fear_greed['value']} - {fear_greed['label']}. {len(filtered)} coin theo rule Neo/Bitcoin/High."
+    summary = f"Fear & Greed: {fear_greed['value']} - {fear_greed['label']}. {len(filtered)} coin theo rule Neo/Bitcoin/HIGH coin."
 
     row = Report(
         created_at=datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S"),
@@ -340,7 +338,7 @@ def get_report_file(filename):
 
 @app.post("/generate-report")
 def generate_report_route():
-    coins_input = request.form.get("coins") or "neo,bitcoin,ethereum,solana,ripple"
+    coins_input = request.form.get("coins") or "neo,bitcoin,highstreet,ethereum,solana,ripple"
     try:
         row, analyzed, fear_greed, markdown = build_report(coins_input)
         flash(f"Đã tạo báo cáo: {row.title}", "success")
@@ -393,7 +391,7 @@ def send_daily_telegram_task():
     if cron_token and provided != cron_token:
         return {"ok": False, "error": "unauthorized"}, 401
 
-    coin_ids = os.environ.get("DAILY_REPORT_COINS", "neo,bitcoin,ethereum,solana,ripple")
+    coin_ids = os.environ.get("DAILY_REPORT_COINS", "neo,bitcoin,highstreet,ethereum,solana,ripple")
     try:
         row, analyzed, fear_greed, markdown = build_report(coin_ids)
         send_telegram(markdown)
