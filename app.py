@@ -338,7 +338,7 @@ def get_report_file(filename):
 
 @app.post("/generate-report")
 def generate_report_route():
-    coins_input = request.form.get("coins") or "neo,bitcoin,highstreet,ethereum,solana,ripple"
+    coins_input = request.form.get("coins") or "neo,bitcoin,highstreet"
     try:
         row, analyzed, fear_greed, markdown = build_report(coins_input)
         flash(f"Đã tạo báo cáo: {row.title}", "success")
@@ -391,7 +391,7 @@ def send_daily_telegram_task():
     if cron_token and provided != cron_token:
         return {"ok": False, "error": "unauthorized"}, 401
 
-    coin_ids = os.environ.get("DAILY_REPORT_COINS", "neo,bitcoin,highstreet,ethereum,solana,ripple")
+    coin_ids = os.environ.get("DAILY_REPORT_COINS", "neo,bitcoin,highstreet")
     try:
         row, analyzed, fear_greed, markdown = build_report(coin_ids)
         send_telegram(markdown)
